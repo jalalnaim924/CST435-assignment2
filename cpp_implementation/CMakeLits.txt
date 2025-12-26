@@ -1,0 +1,42 @@
+cmake_minimum_required(VERSION 3.10)
+project(ParallelImageProcessor)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find OpenCV
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+# Find OpenMP
+find_package(OpenMP REQUIRED)
+
+# Include directories
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+# Source files
+set(COMMON_SOURCES
+    src/filters.cpp
+    src/image_io.cpp
+)
+
+# std::thread version
+add_executable(image_processor_threads
+    src/threads_version.cpp
+    ${COMMON_SOURCES}
+)
+target_link_libraries(image_processor_threads ${OpenCV_LIBS} pthread)
+
+# OpenMP version
+add_executable(image_processor_openmp
+    src/openmp_version.cpp
+    ${COMMON_SOURCES}
+)
+target_link_libraries(image_processor_openmp ${OpenCV_LIBS} OpenMP::OpenMP_CXX)
+
+# Set output directory
+set_target_properties(image_processor_threads image_processor_openmp
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+)

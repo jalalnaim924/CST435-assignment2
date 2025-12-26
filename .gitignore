@@ -1,0 +1,45 @@
+# Compiled files
+*.o
+*.so
+*.a
+*.out
+*.exe
+
+# Build directories
+cpp_implementation/bin/
+cpp_implementation/build/
+cpp_implementation/cmake-build-*/
+
+# Data files (large images)
+data/input/food_samples/*.jpg
+data/input/food_samples/*.jpeg
+data/output/**/*.jpg
+data/output/**/*.jpeg
+!data/input/.gitkeep
+!data/output/.gitkeep
+
+# Results (CSV and graphs will be committed, but can regenerate)
+# results/*.csv
+# results/*.png
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.txt.log
+
+# Compressed files
+*.tar.gz
+*.zip
+
+# Python (for utility scripts)
+__pycache__/
+*.py[cod]
+*.pyc
