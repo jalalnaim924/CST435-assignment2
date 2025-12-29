@@ -5,7 +5,7 @@
 Parallel image processing system implementing 5 image filters using two C++ parallelization paradigms, deployed and tested on Google Cloud Platform.
 
 ### Group Members
-1. Amin - [Matric] - Core Logic & Sequential Code
+1. Amin - 163177 - Core Logic & Sequential Code
 2. Khalil - 164416 - Concurrency Implementation
 3. Jalal - 164498 - Deployment & Automation
 4. Mahdil - [Matric] - Metrics & Documentation
