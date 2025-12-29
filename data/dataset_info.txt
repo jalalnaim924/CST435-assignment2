@@ -1,0 +1,23 @@
+# File: data/dataset_info.txt
+
+Food-101 Dataset Subset
+========================
+
+Selection Criteria:
+- Randomly selected 300 images from full Food-101 dataset
+- Ensures diversity across different food categories
+- Manageable size for GCP testing (~50-100 MB)
+
+Dataset Statistics:
+- Total Images: 300
+- Format: JPG
+- Average Size: ~512x384 pixels
+- Total Dataset Size: ~75 MB
+- Categories: Mixed (from 101 food categories)
+
+Selection Date: [Your date]
+Selected By: [Your name]
+
+Image Naming Convention:
+- food101_001.jpg to food101_300.jpg
+- Sequential numbering for easy tracking

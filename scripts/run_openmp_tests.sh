@@ -1,4 +1,5 @@
-# Test OpenMP version
+#!/bin/bash
+# File: scripts/run_openmp_tests.sh
 
 RESULTS_FILE=$1
 THREAD_COUNTS=(1 2 4 8)

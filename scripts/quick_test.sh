@@ -1,3 +1,5 @@
+#!/bin/bash
+# File: scripts/quick_test.sh
 # Quick smoke test with just a few images
 
 echo "Quick Test - C++ Implementation"

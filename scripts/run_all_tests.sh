@@ -1,4 +1,5 @@
-# main automation script
+#!/bin/bash
+# File: scripts/run_all_tests.sh
 
 set -e  # Exit on error
 

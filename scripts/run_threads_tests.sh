@@ -1,4 +1,5 @@
-# test std::thread version
+#!/bin/bash
+# File: scripts/run_threads_tests.sh
 
 RESULTS_FILE=$1
 THREAD_COUNTS=(1 2 4 8)

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# File: scripts/generate_performance_report.py
+
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -161,3 +164,72 @@ def generate_markdown_report(df, output_file):
         
         f.write("---\n\n")
         f.write("## Comparative Analysis\n\n")
+        
+        # Compare at each thread count
+        for threads in sorted(df['Threads'].unique()):
+            thread_data = df[df['Threads'] == threads]
+            if len(thread_data) >= 2:
+                std_time = thread_data[thread_data['Paradigm'] == 'std::thread']['ExecutionTime(s)'].values[0]
+                omp_time = thread_data[thread_data['Paradigm'] == 'OpenMP']['ExecutionTime(s)'].values[0]
+                
+                faster = 'OpenMP' if omp_time < std_time else 'std::thread'
+                diff_pct = abs(std_time - omp_time) / max(std_time, omp_time) * 100
+                
+                f.write(f"**{threads} Thread(s):**\n")
+                f.write(f"- std::thread: {std_time:.2f}s\n")
+                f.write(f"- OpenMP: {omp_time:.2f}s\n")
+                f.write(f"- **{faster}** is faster by {diff_pct:.1f}%\n\n")
+
+def print_summary(df):
+    """Print summary to console"""
+    print("\n" + "="*60)
+    print("PERFORMANCE SUMMARY")
+    print("="*60)
+    
+    for paradigm in ['std::thread', 'OpenMP']:
+        data = df[df['Paradigm'] == paradigm]
+        print(f"\n{paradigm}:")
+        print(f"  Max Speedup: {data['Speedup'].max():.2f}x")
+        print(f"  Avg Efficiency: {data['Efficiency'].mean()*100:.1f}%")
+        print(f"  Best Time: {data['ExecutionTime(s)'].min():.2f}s")
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python3 generate_performance_report.py <results_csv_file>")
+        sys.exit(1)
+    
+    csv_file = sys.argv[1]
+    output_dir = '../results'
+    
+    # Read data
+    print(f"Reading data from {csv_file}...")
+    df = pd.read_csv(csv_file)
+    
+    # Calculate metrics
+    print("Calculating speedup and efficiency...")
+    df = calculate_metrics(df)
+    
+    # Save updated CSV
+    df.to_csv(csv_file, index=False)
+    print(f"✓ Updated CSV saved: {csv_file}")
+    
+    # Generate visualizations
+    print("Generating performance graphs...")
+    generate_graphs(df, output_dir)
+    print(f"✓ Graphs saved to {output_dir}/")
+    
+    # Generate markdown report
+    report_file = f'{output_dir}/performance_report.md'
+    print("Generating markdown report...")
+    generate_markdown_report(df, report_file)
+    print(f"✓ Report saved: {report_file}")
+    
+    # Print summary
+    print_summary(df)
+    
+    print("\n" + "="*60)
+    print("Performance analysis complete!")
+    print("="*60)
+
+if __name__ == "__main__":
+    main()
