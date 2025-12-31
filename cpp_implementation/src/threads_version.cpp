@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <cmath> 
 #include <algorithm>
 #include "filters.h"
 #include "image_io.h"

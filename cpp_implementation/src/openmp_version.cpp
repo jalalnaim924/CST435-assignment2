@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cmath> 
 #include <omp.h>
 #include <cmath>
 #include <algorithm>
