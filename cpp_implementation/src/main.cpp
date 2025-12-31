@@ -9,8 +9,8 @@ namespace fs = std::filesystem;
 
 int main() {
     // Configuration
-    std::string inputDir = "../../data/input/food_samples/";
-    std::string outputDir = "../../data/output/sequential/";
+    std::string inputDir = "../data/input/food_samples/";
+    std::string outputDir = "../data/output/sequential/";
 
     // Create output directory if it doesn't exist
     fs::create_directories(outputDir);

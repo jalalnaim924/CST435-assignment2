@@ -247,8 +247,8 @@ void processWithThreadCount(const std::vector<std::string>& imageFiles,
 }
 
 int main() {
-    std::string inputDir = "../../data/input/food_samples/";
-    std::string baseOutputDir = "../../data/output/cpp_threads/";
+    std::string inputDir = "../data/input/food_samples/";
+    std::string baseOutputDir = "../data/output/cpp_threads/";
 
     // Get all JPG files
     std::vector<std::string> imageFiles;
