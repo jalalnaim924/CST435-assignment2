@@ -11,8 +11,8 @@ cpp_implementation/build/
 cpp_implementation/cmake-build-*/
 
 # Data files (large images)
-data/input/food_samples/*.jpg
-data/input/food_samples/*.jpeg
+# data/input/food_samples/*.jpg
+# data/input/food_samples/*.jpeg
 data/output/**/*.jpg
 data/output/**/*.jpeg
 !data/input/.gitkeep
