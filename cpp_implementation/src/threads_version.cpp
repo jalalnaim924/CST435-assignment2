@@ -1,13 +1,16 @@
-//std::thread implementation
+//std::thread implementation of image processing filters
 #include <iostream>
 #include <vector>
 #include <string>
 #include <thread>
-#include <cmath> 
+#include <cmath>
 #include <algorithm>
+#include <filesystem>
 #include "filters.h"
 #include "image_io.h"
 #include "utils.h"
+
+namespace fs = std::filesystem;
 
 // Parallel Grayscale using std::thread
 void applyGrayscaleThreaded(unsigned char* data, int width, int height, int channels, int numThreads) {
@@ -184,76 +187,95 @@ void applySharpenThreaded(const unsigned char* input, unsigned char* output,
     }
 }
 
-int main() {
-    std::string inputPath = "../../data/input/food_samples/food1.jpg";
-    std::string outputDir = "../../data/output/threads/";
-
-    int width, height, channels;
+void processWithThreadCount(const std::vector<std::string>& imageFiles, 
+                            const std::string& inputDir, 
+                            const std::string& baseOutputDir, 
+                            int numThreads) {
+    std::string outputDir = baseOutputDir + std::to_string(numThreads) + "_threads/";
+    fs::create_directories(outputDir);
     
-    printProgress("Loading input image...");
-    unsigned char* originalData = loadImage(inputPath.c_str(), &width, &height, &channels);
+    std::cout << "\n========================================" << std::endl;
+    std::cout << "Processing with " << numThreads << " thread(s) (std::thread)" << std::endl;
+    std::cout << "========================================\n" << std::endl;
 
-    if (originalData == nullptr) {
-        std::cerr << "Error: Could not load " << inputPath << std::endl;
+    Timer totalTimer("Total time for " + std::to_string(numThreads) + " threads");
+
+    for (size_t imgIdx = 0; imgIdx < imageFiles.size(); imgIdx++) {
+        std::string inputPath = imageFiles[imgIdx];
+        std::string filename = fs::path(inputPath).filename().string();
+        std::string baseName = fs::path(inputPath).stem().string();
+        
+        std::cout << "[" << (imgIdx + 1) << "/" << imageFiles.size() << "] " << filename << std::endl;
+
+        int width, height, channels;
+        unsigned char* originalData = loadImage(inputPath.c_str(), &width, &height, &channels);
+
+        if (originalData == nullptr) {
+            std::cerr << "  Error loading, skipping..." << std::endl;
+            continue;
+        }
+
+        size_t imageSize = width * height * channels;
+        unsigned char* outputBuffer = new unsigned char[imageSize];
+
+        // Apply all 5 filters
+        std::vector<unsigned char> grayscaleCopy(originalData, originalData + imageSize);
+        applyGrayscaleThreaded(grayscaleCopy.data(), width, height, channels, numThreads);
+        saveImage((outputDir + baseName + "_grayscale.jpg").c_str(), 
+                 width, height, channels, grayscaleCopy.data());
+
+        std::vector<unsigned char> brightnessCopy(originalData, originalData + imageSize);
+        applyBrightnessThreaded(brightnessCopy.data(), width, height, channels, 50, numThreads);
+        saveImage((outputDir + baseName + "_brightness.jpg").c_str(), 
+                 width, height, channels, brightnessCopy.data());
+
+        applyGaussianBlurThreaded(originalData, outputBuffer, width, height, channels, numThreads);
+        saveImage((outputDir + baseName + "_blur.jpg").c_str(), 
+                 width, height, channels, outputBuffer);
+
+        applySobelThreaded(originalData, outputBuffer, width, height, channels, numThreads);
+        saveImage((outputDir + baseName + "_sobel.jpg").c_str(), 
+                 width, height, channels, outputBuffer);
+
+        applySharpenThreaded(originalData, outputBuffer, width, height, channels, numThreads);
+        saveImage((outputDir + baseName + "_sharpen.jpg").c_str(), 
+                 width, height, channels, outputBuffer);
+
+        freeImage(originalData);
+        delete[] outputBuffer;
+    }
+}
+
+int main() {
+    std::string inputDir = "../../data/input/food_samples/";
+    std::string baseOutputDir = "../../data/output/cpp_threads/";
+
+    // Get all JPG files
+    std::vector<std::string> imageFiles;
+    for (const auto& entry : fs::directory_iterator(inputDir)) {
+        std::string ext = entry.path().extension().string();
+        if (ext == ".jpg" || ext == ".JPG" || ext == ".jpeg" || ext == ".JPEG") {
+            imageFiles.push_back(entry.path().string());
+        }
+    }
+
+    if (imageFiles.empty()) {
+        std::cerr << "No JPG images found in " << inputDir << std::endl;
         return -1;
     }
-    std::cout << "Image Size: " << width << "x" << height << " (" << channels << " channels)" << std::endl;
 
-    // Determine optimal number of threads
-    int numThreads = std::thread::hardware_concurrency();
-    if (numThreads == 0) numThreads = 4;
-    std::cout << "Using " << numThreads << " threads" << std::endl;
+    std::cout << "Found " << imageFiles.size() << " images to process" << std::endl;
 
-    size_t imageSize = width * height * channels;
-    unsigned char* outputBuffer = new unsigned char[imageSize];
-
-    // Filter 1: Grayscale (Parallel)
-    {
-        printProgress("Applying Grayscale (Threaded)...");
-        std::vector<unsigned char> grayscaleCopy(originalData, originalData + imageSize);
-        Timer timer("Grayscale (Threaded)");
-        applyGrayscaleThreaded(grayscaleCopy.data(), width, height, channels, numThreads);
-        saveImage((outputDir + "1_grayscale_threaded.jpg").c_str(), width, height, channels, grayscaleCopy.data());
+    // Process with different thread counts: 1, 2, 4, 8
+    std::vector<int> threadCounts = {1, 2, 4, 8};
+    
+    for (int numThreads : threadCounts) {
+        processWithThreadCount(imageFiles, inputDir, baseOutputDir, numThreads);
     }
 
-    // Filter 2: Brightness (Parallel)
-    {
-        printProgress("Applying Brightness (Threaded)...");
-        std::vector<unsigned char> brightnessCopy(originalData, originalData + imageSize);
-        Timer timer("Brightness (Threaded)");
-        applyBrightnessThreaded(brightnessCopy.data(), width, height, channels, 50, numThreads);
-        saveImage((outputDir + "2_brightness_threaded.jpg").c_str(), width, height, channels, brightnessCopy.data());
-    }
-
-    // Filter 3: Gaussian Blur (Parallel)
-    {
-        printProgress("Applying Gaussian Blur (Threaded)...");
-        Timer timer("Gaussian Blur (Threaded)");
-        applyGaussianBlurThreaded(originalData, outputBuffer, width, height, channels, numThreads);
-        saveImage((outputDir + "3_gaussian_blur_threaded.jpg").c_str(), width, height, channels, outputBuffer);
-    }
-
-    // Filter 4: Sobel Edge Detection (Parallel)
-    {
-        printProgress("Applying Sobel Edges (Threaded)...");
-        Timer timer("Sobel (Threaded)");
-        applySobelThreaded(originalData, outputBuffer, width, height, channels, numThreads);
-        saveImage((outputDir + "4_sobel_edges_threaded.jpg").c_str(), width, height, channels, outputBuffer);
-    }
-
-    // Filter 5: Sharpen (Parallel)
-    {
-        printProgress("Applying Sharpening (Threaded)...");
-        Timer timer("Sharpen (Threaded)");
-        applySharpenThreaded(originalData, outputBuffer, width, height, channels, numThreads);
-        saveImage((outputDir + "5_sharpened_threaded.jpg").c_str(), width, height, channels, outputBuffer);
-    }
-
-    std::cout << "\n=== All threaded filters processed successfully! ===" << std::endl;
-    std::cout << "Check the 'data/output/threads/' folder for results." << std::endl;
-
-    freeImage(originalData);
-    delete[] outputBuffer;
+    std::cout << "\n=== All std::thread processing complete! ===" << std::endl;
+    std::cout << "Processed " << imageFiles.size() << " images with 1, 2, 4, and 8 threads" << std::endl;
+    std::cout << "Output directory: " << baseOutputDir << std::endl;
 
     return 0;
 }
