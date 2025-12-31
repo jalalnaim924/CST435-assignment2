@@ -1,14 +1,16 @@
-//OpenMP implementation
+//OpenMP implementation of image processing filters
 #include <iostream>
 #include <vector>
 #include <string>
-#include <cmath> 
-#include <omp.h>
 #include <cmath>
+#include <omp.h>
 #include <algorithm>
+#include <filesystem>
 #include "filters.h"
 #include "image_io.h"
 #include "utils.h"
+
+namespace fs = std::filesystem;
 
 // Parallel Grayscale using OpenMP
 void applyGrayscaleOMP(unsigned char* data, int width, int height, int channels) {
@@ -116,76 +118,98 @@ void applySharpenOMP(const unsigned char* input, unsigned char* output,
     }
 }
 
-int main() {
-    std::string inputPath = "../../data/input/food_samples/food1.jpg";
-    std::string outputDir = "../../data/output/openmp/";
-
-    int width, height, channels;
+void processWithThreadCount(const std::vector<std::string>& imageFiles, 
+                            const std::string& inputDir, 
+                            const std::string& baseOutputDir, 
+                            int numThreads) {
+    std::string outputDir = baseOutputDir + std::to_string(numThreads) + "_threads/";
+    fs::create_directories(outputDir);
     
-    printProgress("Loading input image...");
-    unsigned char* originalData = loadImage(inputPath.c_str(), &width, &height, &channels);
+    // Set OpenMP thread count
+    omp_set_num_threads(numThreads);
+    
+    std::cout << "\n========================================" << std::endl;
+    std::cout << "Processing with " << numThreads << " thread(s) (OpenMP)" << std::endl;
+    std::cout << "========================================\n" << std::endl;
 
-    if (originalData == nullptr) {
-        std::cerr << "Error: Could not load " << inputPath << std::endl;
+    Timer totalTimer("Total time for " + std::to_string(numThreads) + " threads");
+
+    for (size_t imgIdx = 0; imgIdx < imageFiles.size(); imgIdx++) {
+        std::string inputPath = imageFiles[imgIdx];
+        std::string filename = fs::path(inputPath).filename().string();
+        std::string baseName = fs::path(inputPath).stem().string();
+        
+        std::cout << "[" << (imgIdx + 1) << "/" << imageFiles.size() << "] " << filename << std::endl;
+
+        int width, height, channels;
+        unsigned char* originalData = loadImage(inputPath.c_str(), &width, &height, &channels);
+
+        if (originalData == nullptr) {
+            std::cerr << "  Error loading, skipping..." << std::endl;
+            continue;
+        }
+
+        size_t imageSize = width * height * channels;
+        unsigned char* outputBuffer = new unsigned char[imageSize];
+
+        // Apply all 5 filters
+        std::vector<unsigned char> grayscaleCopy(originalData, originalData + imageSize);
+        applyGrayscaleOMP(grayscaleCopy.data(), width, height, channels);
+        saveImage((outputDir + baseName + "_grayscale.jpg").c_str(), 
+                 width, height, channels, grayscaleCopy.data());
+
+        std::vector<unsigned char> brightnessCopy(originalData, originalData + imageSize);
+        applyBrightnessOMP(brightnessCopy.data(), width, height, channels, 50);
+        saveImage((outputDir + baseName + "_brightness.jpg").c_str(), 
+                 width, height, channels, brightnessCopy.data());
+
+        applyGaussianBlurOMP(originalData, outputBuffer, width, height, channels);
+        saveImage((outputDir + baseName + "_blur.jpg").c_str(), 
+                 width, height, channels, outputBuffer);
+
+        applySobelOMP(originalData, outputBuffer, width, height, channels);
+        saveImage((outputDir + baseName + "_sobel.jpg").c_str(), 
+                 width, height, channels, outputBuffer);
+
+        applySharpenOMP(originalData, outputBuffer, width, height, channels);
+        saveImage((outputDir + baseName + "_sharpen.jpg").c_str(), 
+                 width, height, channels, outputBuffer);
+
+        freeImage(originalData);
+        delete[] outputBuffer;
+    }
+}
+
+int main() {
+    std::string inputDir = "../../data/input/food_samples/";
+    std::string baseOutputDir = "../../data/output/cpp_openmp/";
+
+    // Get all JPG files
+    std::vector<std::string> imageFiles;
+    for (const auto& entry : fs::directory_iterator(inputDir)) {
+        std::string ext = entry.path().extension().string();
+        if (ext == ".jpg" || ext == ".JPG" || ext == ".jpeg" || ext == ".JPEG") {
+            imageFiles.push_back(entry.path().string());
+        }
+    }
+
+    if (imageFiles.empty()) {
+        std::cerr << "No JPG images found in " << inputDir << std::endl;
         return -1;
     }
-    std::cout << "Image Size: " << width << "x" << height << " (" << channels << " channels)" << std::endl;
 
-    // Set number of OpenMP threads
-    int numThreads = omp_get_max_threads();
-    omp_set_num_threads(numThreads);
-    std::cout << "Using " << numThreads << " OpenMP threads" << std::endl;
+    std::cout << "Found " << imageFiles.size() << " images to process" << std::endl;
 
-    size_t imageSize = width * height * channels;
-    unsigned char* outputBuffer = new unsigned char[imageSize];
-
-    // Filter 1: Grayscale (OpenMP)
-    {
-        printProgress("Applying Grayscale (OpenMP)...");
-        std::vector<unsigned char> grayscaleCopy(originalData, originalData + imageSize);
-        Timer timer("Grayscale (OpenMP)");
-        applyGrayscaleOMP(grayscaleCopy.data(), width, height, channels);
-        saveImage((outputDir + "1_grayscale_openmp.jpg").c_str(), width, height, channels, grayscaleCopy.data());
+    // Process with different thread counts: 1, 2, 4, 8
+    std::vector<int> threadCounts = {1, 2, 4, 8};
+    
+    for (int numThreads : threadCounts) {
+        processWithThreadCount(imageFiles, inputDir, baseOutputDir, numThreads);
     }
 
-    // Filter 2: Brightness (OpenMP)
-    {
-        printProgress("Applying Brightness (OpenMP)...");
-        std::vector<unsigned char> brightnessCopy(originalData, originalData + imageSize);
-        Timer timer("Brightness (OpenMP)");
-        applyBrightnessOMP(brightnessCopy.data(), width, height, channels, 50);
-        saveImage((outputDir + "2_brightness_openmp.jpg").c_str(), width, height, channels, brightnessCopy.data());
-    }
-
-    // Filter 3: Gaussian Blur (OpenMP)
-    {
-        printProgress("Applying Gaussian Blur (OpenMP)...");
-        Timer timer("Gaussian Blur (OpenMP)");
-        applyGaussianBlurOMP(originalData, outputBuffer, width, height, channels);
-        saveImage((outputDir + "3_gaussian_blur_openmp.jpg").c_str(), width, height, channels, outputBuffer);
-    }
-
-    // Filter 4: Sobel Edge Detection (OpenMP)
-    {
-        printProgress("Applying Sobel Edges (OpenMP)...");
-        Timer timer("Sobel (OpenMP)");
-        applySobelOMP(originalData, outputBuffer, width, height, channels);
-        saveImage((outputDir + "4_sobel_edges_openmp.jpg").c_str(), width, height, channels, outputBuffer);
-    }
-
-    // Filter 5: Sharpen (OpenMP)
-    {
-        printProgress("Applying Sharpening (OpenMP)...");
-        Timer timer("Sharpen (OpenMP)");
-        applySharpenOMP(originalData, outputBuffer, width, height, channels);
-        saveImage((outputDir + "5_sharpened_openmp.jpg").c_str(), width, height, channels, outputBuffer);
-    }
-
-    std::cout << "\n=== All OpenMP filters processed successfully! ===" << std::endl;
-    std::cout << "Check the 'data/output/openmp/' folder for results." << std::endl;
-
-    freeImage(originalData);
-    delete[] outputBuffer;
+    std::cout << "\n=== All OpenMP processing complete! ===" << std::endl;
+    std::cout << "Processed " << imageFiles.size() << " images with 1, 2, 4, and 8 threads" << std::endl;
+    std::cout << "Output directory: " << baseOutputDir << std::endl;
 
     return 0;
 }
