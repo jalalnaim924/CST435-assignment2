@@ -8,12 +8,12 @@ Parallel image processing system implementing 5 image filters using two C++ para
 1. Amin - 163177 - Core Logic & Sequential Code
 2. Khalil - 164416 - Concurrency Implementation
 3. Jalal - 164498 - Deployment & Automation
-4. Mahdil - [Matric] - Metrics & Documentation
+4. Mahdil - 163966 - Metrics & Documentation
 
 ### Dataset
 - **Source**: Food-101 Dataset (Kaggle)
-- **Subset Size**: 300 images
-- **Total Size**: ~75 MB
+- **Subset Size**: 300 images (3 images from 100 types of food variant from Food-101 Dataset)
+- **Total Size**: 4.29 MB (4,501,694 bytes)
 - **Selection**: Random sampling across food categories
 - **Format**: JPG images, ~512x384 pixels average
 
@@ -138,7 +138,7 @@ See `results/performance_report.md` for detailed analysis.
 └── docs/                 # Documentation
 
 ### Links
-- **GitHub Repository**: [Link]
+- **GitHub Repository**: [(https://github.com/jalalnaim924/CST435-assignment2.git)]
 - **YouTube Demonstration**: [Link]
 - **Performance Report**: [results/performance_report.md]
 
