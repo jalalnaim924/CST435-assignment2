@@ -1,10 +1,10 @@
 # CST435 Assignment 2: Parallel Image Processing
 
-## 📋 Project Overview
+## Project Overview
 
 This project implements a parallel image processing system that applies five different filters to food images. We process 300 food images from the Food-101 dataset using both sequential (single-thread) and parallel programming approaches to demonstrate the performance benefits and limitations of parallel computing.
 
-## 👥 Team Members
+## Team Members (Group 34)
 
 | Name | Matric No. | Email |
 |------|------------|-------|
@@ -13,7 +13,7 @@ This project implements a parallel image processing system that applies five dif
 | Khalil Ahmad Bin Zainalabidin | 164416 | khalilahmad@student.usm.my |
 | Jalal Naim Bin Mat Yaacob | 164498 | jalalnaim@student.usm.my |
 
-## 🎯 Project Objectives
+### Project Objectives
 
 - Implement image processing using sequential programming as a baseline
 - Create parallel versions using two different C++ approaches: `std::thread` and OpenMP
@@ -35,7 +35,7 @@ This project implements a parallel image processing system that applies five dif
 4. **Image Sharpening** - Edge enhancement
 5. **Brightness Adjustment** - Intensity modification
 
-## 🔧 Technologies Used
+## Technologies Used
 
 ### Programming Languages & Libraries
 - **C++17** - Main programming language
@@ -54,7 +54,7 @@ This project implements a parallel image processing system that applies five dif
 - **Instance Type**: e2-standard-8 (8 vCPUs, 32 GB RAM)
 - **Operating System**: Debian GNU/Linux 12
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -119,12 +119,15 @@ This automatically tests with 1, 2, 4, and 8 threads, creating separate output f
 This also tests with 1, 2, 4, and 8 threads, similar to the std::thread version.
 
 ## Performance Results
+Execution Time Comparison
+- [results\execution_time_comparison.png]
 
-[results\efficiency_comparison.png]
-[results\execution_time_comparison.png]
+Efficiency Comparison
+- [results\efficiency_comparison.png]
+
 
 ## Project Video
 
 [YouTube Demonstration Video](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
-**© 2026 CST435 Assignment 2. All rights reserved.**
+**© 2026 CST435 Assignment 2 Group 34. All rights reserved.**
