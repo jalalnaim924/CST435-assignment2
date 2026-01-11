@@ -128,6 +128,6 @@ Efficiency Comparison
 
 ## Project Video
 
-[YouTube Demonstration Video](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+https://youtu.be/tYn16NPASzk?si=Ftj6jvny-RJ5Xm1_
 
 **© 2026 CST435 Assignment 2 Group 34. All rights reserved.**
